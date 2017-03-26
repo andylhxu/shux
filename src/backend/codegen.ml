@@ -1,5 +1,8 @@
+open Core
 open Llvm
 open Exceptions
+(*open Ast
+open Sast*)
 (* Hashtbl... *)
 
 let context = global_context ()
@@ -72,11 +75,12 @@ let codegen_library_functions () =
 
 let codegen_main main = 
     (* clear hashtables *)
-    let fty = function_type i32_t [| i32_t; pointer_type str_t |] in
+    let fty = function_type i32_t [||] in
     let f = define_function "main" fty the_module in
     let llbuilder = builder_at_end context (entry_block f) in
 
-    let _ = codegen_stmt llbuilder (SBlock (main.sbody)) in
+    (* let _ = codegen_stmt llbuilder (SBlock (main.sbody)) in *)
+
     build_ret (const_int i32_t 0) llbuilder
 
 let linker filename = 
@@ -87,12 +91,9 @@ let linker filename =
     let llm = Llvm_bitreader.parse_bitcode llctx in (*llmem in*)
     ignore(Llvm_linker.link_modules the_module llm)
 
-let codegen_sprogram sprogram = 
+let translate ns globals functions =
+    (* let main = find_exn functions TODO *)
     let _ = codegen_library_functions () in
-    let _ = codegen_main sprogram.main in
+    let _ = codegen_main main in
     let _ = linker "bindings.bc" in
     the_module
-
-let translate sast =
-
-	
